@@ -31,9 +31,9 @@
             this.button1 = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label125 = new System.Windows.Forms.Label();
-            this.songLoadingProgress = new System.Windows.Forms.ProgressBar();
-            this.percentage = new System.Windows.Forms.Label();
-            this.songList = new System.Windows.Forms.ListView();
+            this.button2 = new System.Windows.Forms.Button();
+            this.songList = new System.Windows.Forms.ListBox();
+            this.timeTable = new System.Windows.Forms.ListBox();
             this.SuspendLayout();
             // 
             // button1
@@ -56,51 +56,52 @@
             // label125
             // 
             this.label125.AutoSize = true;
-            this.label125.Location = new System.Drawing.Point(16, 56);
+            this.label125.Location = new System.Drawing.Point(16, 46);
             this.label125.Name = "label125";
             this.label125.Size = new System.Drawing.Size(233, 13);
             this.label125.TabIndex = 3;
             this.label125.Text = "Your songs will appear here, you have n songs :";
             // 
-            // songLoadingProgress
+            // button2
             // 
-            this.songLoadingProgress.Location = new System.Drawing.Point(13, 40);
-            this.songLoadingProgress.Name = "songLoadingProgress";
-            this.songLoadingProgress.Size = new System.Drawing.Size(409, 13);
-            this.songLoadingProgress.TabIndex = 4;
-            // 
-            // percentage
-            // 
-            this.percentage.AutoSize = true;
-            this.percentage.Location = new System.Drawing.Point(386, 56);
-            this.percentage.Name = "percentage";
-            this.percentage.Size = new System.Drawing.Size(21, 13);
-            this.percentage.TabIndex = 5;
-            this.percentage.Text = "--%";
-            this.percentage.Visible = false;
+            this.button2.Location = new System.Drawing.Point(280, 42);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(142, 23);
+            this.button2.TabIndex = 7;
+            this.button2.Text = "Refresh Song Database";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // songList
             // 
-            this.songList.HideSelection = false;
-            this.songList.Location = new System.Drawing.Point(13, 72);
+            this.songList.FormattingEnabled = true;
+            this.songList.Location = new System.Drawing.Point(12, 75);
             this.songList.Name = "songList";
-            this.songList.Size = new System.Drawing.Size(409, 649);
-            this.songList.TabIndex = 6;
-            this.songList.UseCompatibleStateImageBehavior = false;
+            this.songList.Size = new System.Drawing.Size(303, 368);
+            this.songList.TabIndex = 8;
+            // 
+            // timeTable
+            // 
+            this.timeTable.FormattingEnabled = true;
+            this.timeTable.Location = new System.Drawing.Point(321, 75);
+            this.timeTable.Name = "timeTable";
+            this.timeTable.Size = new System.Drawing.Size(101, 368);
+            this.timeTable.TabIndex = 9;
             // 
             // SongPlaylistUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(434, 733);
+            this.ClientSize = new System.Drawing.Size(434, 461);
+            this.Controls.Add(this.timeTable);
             this.Controls.Add(this.songList);
-            this.Controls.Add(this.percentage);
-            this.Controls.Add(this.songLoadingProgress);
+            this.Controls.Add(this.button2);
             this.Controls.Add(this.label125);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.button1);
             this.Name = "SongPlaylistUI";
             this.Text = "SongPlaylistUI";
+            this.Load += new System.EventHandler(this.spUI_load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -111,8 +112,8 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label125;
-        private System.Windows.Forms.ProgressBar songLoadingProgress;
-        private System.Windows.Forms.Label percentage;
-        private System.Windows.Forms.ListView songList;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.ListBox songList;
+        private System.Windows.Forms.ListBox timeTable;
     }
 }

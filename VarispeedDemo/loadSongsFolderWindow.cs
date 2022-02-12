@@ -8,12 +8,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using NAudio.Wave;
 
 namespace VarispeedDemo
 {
     public partial class loadSongsFolderWindow : Form
     {
+        private AudioFileReader reader2;
         FolderBrowserDialog fBD = new FolderBrowserDialog();
+        public Song_List.TempSongList songList1 = new Song_List.TempSongList();
         public string[] songArray;
         public string path;
         public loadSongsFolderWindow()
@@ -42,6 +45,8 @@ namespace VarispeedDemo
                 foreach (string files in songArray)
                 {
                     songsList.Items.Add(files);
+                    reader2 = new AudioFileReader(files);
+                    songList1.SongSet(files, (TimeSpan.FromSeconds((int)(reader2.TotalTime.TotalSeconds + 0.5)).ToString("mm\\:ss")));
                 }
                 label1.Text = songsList.Items.Count.ToString() + " Songs Added";
             }

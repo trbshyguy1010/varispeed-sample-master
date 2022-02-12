@@ -1,25 +1,26 @@
-﻿using System;
+﻿using DiscordRpcDemo;
+using NAudio.CoreAudioApi;
+using NAudio.Wave;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using NAudio.CoreAudioApi;
-using NAudio.Wave;
-using NAudio.WaveFormRenderer;
-using System.Drawing;
-using VarispeedDemo.SoundTouch;
-using DiscordRpcDemo;
-using System.Collections.Generic;
 using VarispeedDemo.e;
-using System.Diagnostics;
+using VarispeedDemo.SoundTouch;
 
 namespace VarispeedDemo
 {
     //to add : BPM Detector, visualiser, Discord Rich Presence   
     public partial class MainForm : Form
     {
+        Song_List.TempSongList tempSong = new Song_List.TempSongList();
+        static Data.datasdfg verylongname = new Data.datasdfg();
         public DeviceChange change = new DeviceChange();
         public int[] waveOutID;
-        string ID = "840249670059556934";
+        public string[] songNames;
+        string ID = verylongname.DiscordID;
         param param = new param();
         int time = 0;
         sbyte pBr = 2;
@@ -34,7 +35,7 @@ namespace VarispeedDemo
         public MainForm()
         {
             InitializeComponent();
-            getDevices();            
+            getDevices();
             dRPC.downText = "";
             dRPC.upText = "Idle";
             dRPC.DRPCEnable();
@@ -42,7 +43,7 @@ namespace VarispeedDemo
             timer1.Start();
             timer3.Start();
             timer4.Start();
-            Closing += OnMainFormClosing;            
+            Closing += OnMainFormClosing;
             MMDeviceCollection devices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
             comboBoxModes.Items.Add("Speed");
             comboBoxModes.Items.Add("Tempo");
@@ -59,10 +60,10 @@ namespace VarispeedDemo
                 comboBox2.Items.Add(caps.ProductName);
                 List<int> list = new List<int>();
                 waveOutID = list.ToArray();
-            }          
-        }    
+            }
+        }
         private void getDevice()
-        {                       
+        {
             if (comboBox2.SelectedItem != null)
             {
                 MMDevice devices2 = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
@@ -73,7 +74,7 @@ namespace VarispeedDemo
                 if (progressBar1Master.Value > 50 && progressBar1Master.Value < 90) { ModifyProgressBarColor.SetState(progressBar1Master, pBy); }
                 else if (progressBar1Master.Value > 90) { ModifyProgressBarColor.SetState(progressBar1Master, pBr); }
                 else { ModifyProgressBarColor.SetState(progressBar1Master, pBg); }
-            }            
+            }
         }
         private void OnMainFormClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -85,12 +86,13 @@ namespace VarispeedDemo
                 process.Kill();
             }
             PluginDisposal();
+            tempSong.SongUnset();
         }
         public void PluginDisposal()
         {
             change.wasabi?.Dispose();
             speedControl?.Dispose();
-            dRPC?.DRPCEnable();            
+            dRPC?.DRPCEnable();
         }
 
         private void WavePlayerOnPlaybackStopped(object sender, StoppedEventArgs stoppedEventArgs)
@@ -132,14 +134,14 @@ namespace VarispeedDemo
         }
 
         private void speedchange()
-        {            
+        {
             speedControl.PlaybackRate = 0.5f + trackBarPlaybackRate.Value * 0.1f;
             labelPlaybackSpeed.Text = $"x{speedControl.PlaybackRate:F1}";
             applyspeed.Enabled = false;
         }
         private void OnTrackBarPlaybackRateScroll(object sender, EventArgs e)
-        {            
-            applyspeed.Enabled = true;            
+        {
+            applyspeed.Enabled = true;
         }
 
         private void OnButtonLoadClick(object sender, EventArgs e)
@@ -165,14 +167,17 @@ namespace VarispeedDemo
             songpath = file;
             if (file == null) return;
             comboBox1.Items.Add(file);
-            WaveLoader();            
+            // songNames
+            WaveLoader();
         }
-        private void LoadSong() {
+        private void LoadSong()
+        {
             label3.Text = "Now Playing : " + songpath;
             if (songpath == null) { LoadFile(); }
             if (songpath == null) { return; }
-            reader = new AudioFileReader(songpath);            
-            DisplayPosition();            
+            reader = new AudioFileReader(songpath);
+            DisplayPosition();
+            tempSong.SongSet(songpath, (TimeSpan.FromSeconds((int)(reader.TotalTime.TotalSeconds + 0.5)).ToString("mm\\:ss")));
             volumeBar1.Value = 100;
             label4.Text = volumeBar1.Value + "%";
             var useTempo = comboBoxModes.SelectedIndex == 1;
@@ -184,14 +189,14 @@ namespace VarispeedDemo
         {
             if (reader != null)
             {
-                trackBarPlaybackPosition.Value = (int) reader.CurrentTime.TotalSeconds;
+                trackBarPlaybackPosition.Value = (int)reader.CurrentTime.TotalSeconds;
                 DisplayPosition();
             }
         }
 
         private void DisplayPosition()
         {
-            labelPosition.Text = reader.CurrentTime.ToString("mm\\:ss");            
+            labelPosition.Text = reader.CurrentTime.ToString("mm\\:ss");
         }
 
         private void trackBarPlaybackPosition_Scroll(object sender, EventArgs e)
@@ -225,7 +230,7 @@ namespace VarispeedDemo
                 wavePlayer.Volume = (volumeBar1.Value / 10) * 0.1f;
                 label4.Text = $"{(wavePlayer.Volume) * 100}%";
             }
-                
+
         }
 
         private void timer2_Tick(object sender, EventArgs e)
@@ -268,7 +273,7 @@ namespace VarispeedDemo
         private void timer4_Tick(object sender, EventArgs e)
         {
             if (wavePlayer != null)
-            {                
+            {
                 dRPC.upText = "Playing a song at " + labelPlaybackSpeed.Text;
                 dRPC.downText = labelPosition.Text + " Elapsed | Songs : " + (comboBox1.SelectedIndex + 1).ToString() + "/" + comboBox1.Items.Count.ToString();
                 dRPC.DRPCEnable();
@@ -278,7 +283,7 @@ namespace VarispeedDemo
                 dRPC.upText = "Idle";
                 dRPC.downText = "";
                 dRPC.DRPCEnable();
-            }                  
+            }
         }
 
         private void buttonPlay_Click(object sender, EventArgs e)
@@ -294,7 +299,7 @@ namespace VarispeedDemo
             }
             if (speedControl == null)
             {
-                LoadSong();                
+                LoadSong();
                 if (speedControl == null) return;
             }
             change.DeviceSet(comboBox2.SelectedIndex);
@@ -379,7 +384,7 @@ namespace VarispeedDemo
                 this.presence.state = downText;
                 this.presence.largeImageKey = "bigicon";
                 this.presence.smallImageKey = "bigicon";
-                this.presence.largeImageText = "WowPlayer v2.5b";
+                this.presence.largeImageText = "WowPlayer v2.7b";
                 this.presence.smallImageText = upText;
                 DiscordRpc.UpdatePresence(ref this.presence);
             }
@@ -387,7 +392,7 @@ namespace VarispeedDemo
             {
                 MessageBox.Show(r.ToString(), "Discord RPC Error", MessageBoxButtons.OK, MessageBoxIcon.Error); ;
             }
-                
+
         }
     }
     public class param : Form
