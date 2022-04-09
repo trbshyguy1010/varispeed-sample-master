@@ -19,7 +19,7 @@ namespace VarispeedDemo
     {
         public DeviceChange change = new DeviceChange();
         public int[] waveOutID;
-        string ID = "840249670059556934";
+        string ID; // here goes your discord rpc id
         param param = new param();
         int time = 0;
         sbyte pBr = 2;
@@ -311,7 +311,7 @@ namespace VarispeedDemo
             EnableControls(true);
         }
 
-        private void rebut_Click(object sender, EventArgs e)
+he        private void rebut_Click(object sender, EventArgs e)
         {
             speedControl.PlaybackRate = 1.0f;
             trackBarPlaybackRate.Value = (int)(speedControl.PlaybackRate + 4);
