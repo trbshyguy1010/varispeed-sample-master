@@ -12,8 +12,7 @@ namespace VarispeedDemo.e
 {
     public class Waveform
     {
-        public Image image;
-        public void SetWave(string audioFilePath)
+        public async Task<Image> SetWave(string audioFilePath)
         {
             var maxPeakProvider = new MaxPeakProvider();
             var rmsPeakProvider = new RmsPeakProvider(200); // e.g. 200
@@ -27,7 +26,7 @@ namespace VarispeedDemo.e
             myRendererSettings.TopPeakPen = Pens.Green;
             myRendererSettings.BottomPeakPen = Pens.YellowGreen;
             var renderer = new WaveFormRenderer();
-            image = renderer.Render(audioFilePath, myRendererSettings);
+            return await Task.Run(() => { return renderer.Render(audioFilePath, myRendererSettings); });
         }
     }
 }

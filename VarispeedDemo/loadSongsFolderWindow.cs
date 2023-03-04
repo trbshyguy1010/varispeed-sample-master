@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using NAudio.Wave;
+using VarispeedDemo.Song_List;
 
 namespace VarispeedDemo
 {
@@ -44,9 +45,15 @@ namespace VarispeedDemo
                 songArray = Directory.GetFiles(path, "*.mp3", SearchOption.AllDirectories);
                 foreach (string files in songArray)
                 {
-                    songsList.Items.Add(files);
-                    reader2 = new AudioFileReader(files);
-                    songList1.SongSet(files, (TimeSpan.FromSeconds((int)(reader2.TotalTime.TotalSeconds + 0.5)).ToString("mm\\:ss")));
+                    try
+                    {
+                        songsList.Items.Add(files);
+                        reader2 = new AudioFileReader(files);
+                        TempSongList.cabiste.Add(new DisplayModel { Name = files, Time = (TimeSpan.FromSeconds((int)(reader2.TotalTime.TotalSeconds + 0.5)).ToString("mm\\:ss")) });
+                        TempSongList.SongSet();
+                    } catch (Exception r) {
+                        MessageBox.Show("Some Songs Were not loaded because of the loading reason :\n" + r.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 label1.Text = songsList.Items.Count.ToString() + " Songs Added";
             }

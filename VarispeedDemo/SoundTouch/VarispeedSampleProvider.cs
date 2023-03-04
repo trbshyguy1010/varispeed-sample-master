@@ -69,7 +69,7 @@ namespace VarispeedDemo.SoundTouch
                 var desiredSampleFrames = (count - samplesRead)/channelCount;
 
                 var received = soundTouch.ReceiveSamples(soundTouchReadBuffer, desiredSampleFrames)*channelCount;
-                // use loop instead of Array.Copy due to WaveBuffer
+                // use loop instead of Array. Copy due to WaveBuffer
                 for (int n = 0; n < received; n++)
                 {
                     buffer[offset+samplesRead++] = soundTouchReadBuffer[n];

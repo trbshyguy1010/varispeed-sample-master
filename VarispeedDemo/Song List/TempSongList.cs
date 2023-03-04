@@ -4,38 +4,67 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Configuration;
-using System.Data.SqlClient;
-using System.Data;
+using Newtonsoft;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace VarispeedDemo.Song_List
 {
     public class TempSongList
     {
-        SqlConnection conn;
-        public void SongSet(string name, string time)
+        public static string path = string.Empty;
+        public static List<DisplayModel> cabiste = new List<DisplayModel>();
+        public static void SongSet()
         {
-            string connectionString1 = ConfigurationManager.ConnectionStrings["VarispeedDemo.Properties.Settings.PlaylistDBConnectionString"].ConnectionString;
-            string queryn = "INSERT INTO SimpleSongDatabase VALUES (@songName, @songLength)";
-            using (conn = new SqlConnection(connectionString1))
-            using (SqlCommand commn = new SqlCommand(queryn, conn))
+            var no_dub = cabiste.Distinct().ToList();
+            var dataJson = JsonConvert.SerializeObject(no_dub);
+            try
             {
-                conn.Open();
-                commn.Parameters.AddWithValue("@songName", name);
-                commn.Parameters.AddWithValue("@songLength", time);
-                commn.ExecuteScalar();
+                System.IO.File.WriteAllText(path, dataJson);
+            } catch
+            {
+                System.IO.File.WriteAllText(@"testing.json", dataJson);
             }
         }
-        public void SongUnset()
+        public static void SongUnset(string songFileToRemove)
         {
-            string connectionString1 = ConfigurationManager.ConnectionStrings["VarispeedDemo.Properties.Settings.PlaylistDBConnectionString"].ConnectionString;
-            string queryn = "DELETE FROM SimpleSongDatabase";
-            using (conn = new SqlConnection(connectionString1))
-            using (SqlCommand commn = new SqlCommand(queryn, conn))
+            // hey we studied this in algorithm session how useful :)
+            int i = 0;
+            while (cabiste.Count > 0 && i < cabiste.Count)
             {
-                conn.Open();
-                commn.ExecuteNonQuery();
+                if (cabiste[i].Name == songFileToRemove) {
+                    cabiste.RemoveAt(i);
+                    break;
+                } else { i++; }
+            }
+            SongSet();
+        }
+        public static void SongReset() { 
+            cabiste.Clear(); 
+            SongSet();
+        }
+        public static List<DisplayModel> GetSong()
+        {
+            try
+            {
+                string data;
+                try { 
+                    data = System.IO.File.ReadAllText(path);
+                } catch
+                {
+                    data = System.IO.File.ReadAllText(@"testing.json");
+                }
+                var dataJson2 = JsonConvert.DeserializeObject<List<DisplayModel>>(data);
+                return dataJson2;
+            } catch 
+            {
+                return new List<DisplayModel>();
             }
         }
-        
+    }
+    public class DisplayModel
+    {
+        public string Name { get; set; }
+        public string Time { get; set; }
     }
 }

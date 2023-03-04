@@ -4,10 +4,12 @@ using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using VarispeedDemo.e;
+using VarispeedDemo.Song_List;
 using VarispeedDemo.SoundTouch;
 
 namespace VarispeedDemo
@@ -15,12 +17,15 @@ namespace VarispeedDemo
     //to add : BPM Detector, visualiser, Discord Rich Presence   
     public partial class MainForm : Form
     {
+        string[] quotes = {"Go off yourself", "Welcome home master nyaa~", "Bing Chilling", "every 60 seconds in africa, a minute passes...", "Made in Ohio", "Delete system32 ;)" };
+
+        public Metadata metadata = new Metadata();
+        public List<string> k;
         Song_List.TempSongList tempSong = new Song_List.TempSongList();
         static Data.datasdfg verylongname = new Data.datasdfg();
         public DeviceChange change = new DeviceChange();
         public int[] waveOutID;
-        public string[] songNames;
-        string ID = verylongname.DiscordID;
+        string ID; // here goes your discord rpc id
         param param = new param();
         int time = 0;
         sbyte pBr = 2;
@@ -35,6 +40,12 @@ namespace VarispeedDemo
         public MainForm()
         {
             InitializeComponent();
+            this.Text = metadata.WowVersion + " Nya~";
+
+            // filler code (unnecessary and could be deleted) 
+            Random random= new Random();
+            int index = random.Next(quotes.Length);
+            toolStripStatusLabel1.Text = "Quote of the day : " + quotes[index];
             getDevices();
             dRPC.downText = "";
             dRPC.upText = "Idle";
@@ -51,6 +62,12 @@ namespace VarispeedDemo
             comboBox2.SelectedIndex = 0; // By Default it selects the first item in the list, this is intentional and will not change
             change.DeviceSet(comboBox2.SelectedIndex);
             EnableControls(false);
+            TempSongList.cabiste = TempSongList.GetSong();
+            label11.Visible = false;
+            for (int l = 0; l < TempSongList.cabiste.Count; l++)
+            {
+                comboBox1.Items.Add(TempSongList.cabiste[l].Name);
+            }
         }
         private void getDevices()
         {
@@ -79,14 +96,13 @@ namespace VarispeedDemo
         private void OnMainFormClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             var chromeDriverProcesses = Process.GetProcesses().
-    Where(pr => pr.ProcessName == "CSAudioVisualizationExample"); // without '.exe'
+    Where(pr => pr.ProcessName == "DirectXProject"); // without '.exe'
 
             foreach (var process in chromeDriverProcesses)
             {
                 process.Kill();
             }
             PluginDisposal();
-            tempSong.SongUnset();
         }
         public void PluginDisposal()
         {
@@ -110,10 +126,14 @@ namespace VarispeedDemo
             buttonLoad.Enabled = !isPlaying;
             loadToolStripMenuItem.Enabled = !isPlaying;
             loadFromFolderToolStripMenuItem.Enabled = !isPlaying;
+            refreshSongsToolStripMenuItem.Enabled = !isPlaying;
+            getSongsFromURLToolStripMenuItem.Enabled = !isPlaying;
             buttonStop.Enabled = isPlaying;
             comboBoxModes.Enabled = !isPlaying;
             comboBox2.Enabled = !isPlaying;
             progressBar1Master.Enabled = isPlaying;
+            trackBarPlaybackRate.Enabled = isPlaying;
+            volumeBar1.Enabled = isPlaying;
         }
 
         private string SelectFile()
@@ -148,11 +168,15 @@ namespace VarispeedDemo
         {
             LoadFile();
         }
-        private void WaveLoader()
+        private async void WaveLoader()
         {
+            pictureBox1.Visible = false;
+            label11.Visible = true;
             var wf = new Waveform();
-            wf.SetWave(songpath);
-            pictureBox1.Image = wf.image;
+            var image = await wf.SetWave(songpath);
+            pictureBox1.Visible = true;
+            label11.Visible = false;
+            pictureBox1.Image = image;
         }
         private void LoadFile()
         {
@@ -161,12 +185,26 @@ namespace VarispeedDemo
             change.wasabi?.Dispose();
             reader = null;
             speedControl = null;
-            trackBarPlaybackRate.Enabled = true;
-            volumeBar1.Enabled = true;
             var file = SelectFile();
             songpath = file;
             if (file == null) return;
+            // verify for duplicates then add the file
+            int j = 0;
+            while (j < comboBox1.Items.Count)
+            {
+                if (file == comboBox1.Items[j].ToString())
+                {
+                    return;
+                }
+                else
+                {
+                    j++;
+                }
+            }
             comboBox1.Items.Add(file);
+            reader = new AudioFileReader(songpath);
+            TempSongList.cabiste.Add(new DisplayModel { Name = songpath, Time = StripMilliseconds(TimeSpan.FromSeconds((int)(reader.TotalTime.TotalSeconds + 0.5))).ToString() });
+            TempSongList.SongSet();
             // songNames
             WaveLoader();
         }
@@ -177,7 +215,6 @@ namespace VarispeedDemo
             if (songpath == null) { return; }
             reader = new AudioFileReader(songpath);
             DisplayPosition();
-            tempSong.SongSet(songpath, (TimeSpan.FromSeconds((int)(reader.TotalTime.TotalSeconds + 0.5)).ToString("mm\\:ss")));
             volumeBar1.Value = 100;
             label4.Text = volumeBar1.Value + "%";
             var useTempo = comboBoxModes.SelectedIndex == 1;
@@ -193,10 +230,13 @@ namespace VarispeedDemo
                 DisplayPosition();
             }
         }
-
+        public static TimeSpan StripMilliseconds(TimeSpan time)
+        {
+            return new TimeSpan(time.Hours, time.Minutes, time.Seconds); 
+        }
         private void DisplayPosition()
         {
-            labelPosition.Text = reader.CurrentTime.ToString("mm\\:ss");
+            labelPosition.Text = StripMilliseconds(reader.CurrentTime).ToString();
         }
 
         private void trackBarPlaybackPosition_Scroll(object sender, EventArgs e)
@@ -274,8 +314,8 @@ namespace VarispeedDemo
         {
             if (wavePlayer != null)
             {
-                dRPC.upText = "Playing a song at " + labelPlaybackSpeed.Text;
-                dRPC.downText = labelPosition.Text + " Elapsed | Songs : " + (comboBox1.SelectedIndex + 1).ToString() + "/" + comboBox1.Items.Count.ToString();
+                dRPC.upText = "Playing : [" + Path.GetFileNameWithoutExtension(songpath) + "] at " + labelPlaybackSpeed.Text;
+                dRPC.downText = labelPosition.Text + " Elapsed | Songs : " + comboBox1.Items.Count.ToString();
                 dRPC.DRPCEnable();
             }
             else
@@ -303,17 +343,23 @@ namespace VarispeedDemo
                 if (speedControl == null) return;
             }
             change.DeviceSet(comboBox2.SelectedIndex);
-            wavePlayer.Init(speedControl);
-            change.wasabi.Init(speedControl);
-            timer2.Start();
-            label3.Text = "Now Playing : " + songpath;
-            trackBarPlaybackPosition.Value = 0;
-            trackBarPlaybackPosition.Maximum = (int)(reader.TotalTime.TotalSeconds + 0.5);
-            label10.Text = "Song Duration : " + TimeSpan.FromSeconds((int)(reader.TotalTime.TotalSeconds + 0.5)).ToString("mm\\:ss");
-            change.wasabi.Play();
-            change.wasabi.Volume = (volumeBar1.Value / 10) * 0.1f;
-            timer4.Interval = 1;
-            EnableControls(true);
+            try {
+                wavePlayer.Init(speedControl);
+                change.wasabi.Init(speedControl);
+                timer2.Start();
+                label3.Text = "Now Playing : " + songpath;
+                trackBarPlaybackPosition.Value = 0;
+                trackBarPlaybackPosition.Maximum = (int)(reader.TotalTime.TotalSeconds + 0.5);
+                label10.Text = "Song Duration : " + TimeSpan.FromSeconds((int)(reader.TotalTime.TotalSeconds + 0.5)).ToString("mm\\:ss");
+                change.wasabi.Play();
+                change.wasabi.Volume = (volumeBar1.Value / 10) * 0.1f;
+                timer4.Interval = 1;
+                EnableControls(true);
+            } catch (NAudio.MmException er)
+            {
+                MessageBox.Show("The audio interface is currently used by another program, please close it before playing a song.", "Fatal Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            
         }
 
         private void rebut_Click(object sender, EventArgs e)
@@ -343,7 +389,7 @@ namespace VarispeedDemo
         {
             try
             {
-                Process.Start(@"VisualizerCSCore\CSAudioVisualizationExample.exe");
+                Process.Start(@"VisualizerDirectX\DirectXProject.exe");
             }
             catch (Exception r)
             {
@@ -354,6 +400,38 @@ namespace VarispeedDemo
         {
             SongPlaylistUI spUI = new SongPlaylistUI();
             spUI.Show();
+        }
+
+        private void refreshSongsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var p = TempSongList.cabiste;
+            comboBox1.Items.Clear();
+            for (int j = 0; j < p.Count; j++) {
+                comboBox1.Items.Add(p[j].Name); 
+            }
+            MessageBox.Show(comboBox1.Items.Count.ToString() + " songs refreshed from playlist", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void getSongsFromURLToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SongDownloader.SongDownloader sd = new SongDownloader.SongDownloader();
+            sd.Show();
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            About__Unnecessary_.About about = new About__Unnecessary_.About();
+            about.ShowDialog();
+        }
+
+        private void gettingStartedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("notepad.exe", "readme.txt");
+        }
+
+        private void gitHubUwUToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("https://github.com/trbshyguy1010");
         }
     }
     public static class ModifyProgressBarColor
@@ -367,10 +445,12 @@ namespace VarispeedDemo
     }
     public class DRPC
     {
+        public DiscordRpc drpc;
         private DiscordRpc.EventHandlers handlers;
         private DiscordRpc.RichPresence presence;
         public string upText;
         public string downText;
+        public Metadata metadata = new Metadata();
         public void DRPCEnable()
         {
             try
@@ -384,13 +464,13 @@ namespace VarispeedDemo
                 this.presence.state = downText;
                 this.presence.largeImageKey = "bigicon";
                 this.presence.smallImageKey = "bigicon";
-                this.presence.largeImageText = "WowPlayer v2.7b";
+                this.presence.largeImageText = metadata.WowVersion;
                 this.presence.smallImageText = upText;
                 DiscordRpc.UpdatePresence(ref this.presence);
             }
             catch (DllNotFoundException r)
             {
-                MessageBox.Show(r.ToString(), "Discord RPC Error", MessageBoxButtons.OK, MessageBoxIcon.Error); ;
+                MessageBox.Show(r.ToString(), "Discord RPC Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
         }
