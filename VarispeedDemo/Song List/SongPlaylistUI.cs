@@ -55,14 +55,14 @@ namespace VarispeedDemo
         }
         private void LoadSongS()
         {
-            ContextMenu menu = new ContextMenu();
-            menu.MenuItems.Add("Delete", new EventHandler(Removesong_click));
+            ContextMenuStrip menu = new();
+            menu.Items.Add("Delete",null, new EventHandler(Removesong_click));
             for (int i = 0; i < TempSongList.cabiste.Count; i++)
             {
                 songList.Items.Add(TempSongList.cabiste[i].Name);
                 timeTable.Items.Add(TempSongList.cabiste[i].Time);
             }
-            songList.ContextMenu = menu;
+            songList.ContextMenuStrip = menu;
         }
 
         private void Removesong_click(object sender, EventArgs e)

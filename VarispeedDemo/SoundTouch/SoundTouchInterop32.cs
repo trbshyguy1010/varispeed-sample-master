@@ -6,7 +6,7 @@ namespace VarispeedDemo.SoundTouch
 {
     class SoundTouchInterop32
     {
-        private const string SoundTouchDllName = "SoundTouch.dll";
+        private const string SoundTouchDllName = "lib/SoundTouch.dll";
 
         /// <summary>
         /// Create a new instance of SoundTouch processor.

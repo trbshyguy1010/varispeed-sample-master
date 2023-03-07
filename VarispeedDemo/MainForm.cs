@@ -1,32 +1,23 @@
-﻿using DiscordRpcDemo;
+﻿using System.Runtime.InteropServices;
+using System.Diagnostics;
+using DiscordRpcDemo;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using VarispeedDemo.e;
 using VarispeedDemo.Song_List;
 using VarispeedDemo.SoundTouch;
 
 namespace VarispeedDemo
 {
-    //to add : BPM Detector, visualiser, Discord Rich Presence   
+    //to add : BPM Detector, visualiser, Discord Rich Presence
     public partial class MainForm : Form
     {
-        string[] quotes = {"Go off yourself", "Welcome home master nyaa~", "Bing Chilling", "every 60 seconds in africa, a minute passes...", "Made in Ohio", "Delete system32 ;)" };
+        string[] quotes = { "Go off yourself", "Welcome home master nyaa~", "Bing Chilling", "every 60 seconds in africa, a minute passes...", "Made in Ohio", "Delete system32 ;)" };
 
         public Metadata metadata = new Metadata();
         public List<string> k;
-        Song_List.TempSongList tempSong = new Song_List.TempSongList();
-        static Data.datasdfg verylongname = new Data.datasdfg();
         public DeviceChange change = new DeviceChange();
         public int[] waveOutID;
-        string ID; // here goes your discord rpc id
-        param param = new param();
         int time = 0;
         sbyte pBr = 2;
         sbyte pBy = 3;
@@ -43,7 +34,7 @@ namespace VarispeedDemo
             this.Text = metadata.WowVersion + " Nya~";
 
             // filler code (unnecessary and could be deleted) 
-            Random random= new Random();
+            Random random = new Random();
             int index = random.Next(quotes.Length);
             toolStripStatusLabel1.Text = "Quote of the day : " + quotes[index];
             getDevices();
@@ -232,7 +223,7 @@ namespace VarispeedDemo
         }
         public static TimeSpan StripMilliseconds(TimeSpan time)
         {
-            return new TimeSpan(time.Hours, time.Minutes, time.Seconds); 
+            return new TimeSpan(time.Hours, time.Minutes, time.Seconds);
         }
         private void DisplayPosition()
         {
@@ -343,7 +334,8 @@ namespace VarispeedDemo
                 if (speedControl == null) return;
             }
             change.DeviceSet(comboBox2.SelectedIndex);
-            try {
+            try
+            {
                 wavePlayer.Init(speedControl);
                 change.wasabi.Init(speedControl);
                 timer2.Start();
@@ -355,11 +347,12 @@ namespace VarispeedDemo
                 change.wasabi.Volume = (volumeBar1.Value / 10) * 0.1f;
                 timer4.Interval = 1;
                 EnableControls(true);
-            } catch (NAudio.MmException er)
+            }
+            catch (NAudio.MmException er)
             {
                 MessageBox.Show("The audio interface is currently used by another program, please close it before playing a song.", "Fatal Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            
+
         }
 
         private void rebut_Click(object sender, EventArgs e)
@@ -389,7 +382,7 @@ namespace VarispeedDemo
         {
             try
             {
-                Process.Start(@"VisualizerDirectX\DirectXProject.exe");
+                Process.Start("VisualizerDirectX/DirectXProject.exe");
             }
             catch (Exception r)
             {
@@ -406,8 +399,9 @@ namespace VarispeedDemo
         {
             var p = TempSongList.cabiste;
             comboBox1.Items.Clear();
-            for (int j = 0; j < p.Count; j++) {
-                comboBox1.Items.Add(p[j].Name); 
+            for (int j = 0; j < p.Count; j++)
+            {
+                comboBox1.Items.Add(p[j].Name);
             }
             MessageBox.Show(comboBox1.Items.Count.ToString() + " songs refreshed from playlist", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -456,10 +450,8 @@ namespace VarispeedDemo
             try
             {
                 param main = new param();
-                this.handlers = default(DiscordRpc.EventHandlers);
-                DiscordRpc.Initialize("840249670059556934", ref this.handlers, true, null);
-                this.handlers = default(DiscordRpc.EventHandlers);
-                DiscordRpc.Initialize("840249670059556934", ref this.handlers, true, null);
+                this.handlers = default;
+                DiscordRpc.Initialize("782685898163617802", ref this.handlers, true, null);
                 this.presence.details = upText;
                 this.presence.state = downText;
                 this.presence.largeImageKey = "bigicon";
@@ -468,7 +460,7 @@ namespace VarispeedDemo
                 this.presence.smallImageText = upText;
                 DiscordRpc.UpdatePresence(ref this.presence);
             }
-            catch (DllNotFoundException r)
+            catch (Exception r)
             {
                 MessageBox.Show(r.ToString(), "Discord RPC Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }

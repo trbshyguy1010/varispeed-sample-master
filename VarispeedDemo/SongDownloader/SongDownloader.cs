@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data;
 using VideoLibrary;
-using System.Windows.Forms;
-using System.IO;
-using CSCore.Codecs.MP1;
-using CSCore.Codecs.MP3;
-using MediaToolkit.Model;
 using MediaToolkit;
+using MediaToolkit.Model;
+using System.Diagnostics;
 
 namespace VarispeedDemo.SongDownloader
 {
@@ -33,37 +23,37 @@ namespace VarispeedDemo.SongDownloader
                 vidTitle.Text = "Video Title : " + getURL.Title;
                 enableControlsWhenDownloading(true);
 
-            } catch
+            } catch (Exception ex) 
             {
+                Debug.WriteLine(ex.Message);
                 MessageBox.Show("This is not a valid URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 enableControlsWhenDownloading(true);
-                return;
             }
         }
         private YouTubeVideo videoExtractor(string url)
         {
             return YouTube.Default.GetVideo(url);
         }
-        private void enableControlsWhenDownloading(bool f)
+        private void enableControlsWhenDownloading(bool isEnabled)
         {
-            search_btn.Enabled = f;
-            urlText.Enabled = f;
-            songExt.Enabled = f;
-            download_btn.Enabled = f;
+            search_btn.Enabled = isEnabled;
+            urlText.Enabled = isEnabled;
+            songExt.Enabled = isEnabled;
+            download_btn.Enabled = isEnabled;
         }
         public string getFullFilePath(string filePath, List<YouTubeVideo> audio)
         {
             return filePath + "\\" + string.Join("_", audio[0].Title.Split(Path.GetInvalidFileNameChars()));
         }
 
-        private async Task<byte[]> DownloadSong(string url, YouTubeVideo mpAudio)
+        private async Task<byte[]>? DownloadSong(string url, YouTubeVideo mpAudio)
         {
             try
             {
                 var getURL = await YouTube.Default.GetAllVideosAsync(url);
                 MessageBox.Show("Downloading in progress...", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 enableControlsWhenDownloading(false);
-                return await Task.Run(() => { return mpAudio.GetBytesAsync(); }); 
+                return await Task.Run(mpAudio.GetBytesAsync); 
             }
             catch
             {
@@ -85,8 +75,13 @@ namespace VarispeedDemo.SongDownloader
                     var audio = getURL.Where(_ => _.AudioFormat == AudioFormat.Aac && _.AdaptiveKind == AdaptiveKind.Audio).ToList();
                     var mpAudio = audio.FirstOrDefault(x => x.AudioBitrate > 0);
                     string fullName = getFullFilePath(dirString, audio);
-                    var bytes = await (DownloadSong(url, mpAudio));
-                    if (bytes == null) { MessageBox.Show("Error while downloading file...", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+                    byte[]? bytes = await DownloadSong(url, mpAudio);
+
+                    if (bytes is null) { 
+                        MessageBox.Show("Error while downloading file...", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); 
+                        return; 
+                    }
+
                     if (songExt.Text == "")
                     {
                         File.WriteAllBytes(fullName + ".aac", bytes);

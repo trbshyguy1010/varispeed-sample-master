@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NAudio.CoreAudioApi;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using NAudio.WaveFormRenderer;
-using System.Drawing;
 
 namespace VarispeedDemo.e
 {
@@ -26,7 +19,9 @@ namespace VarispeedDemo.e
             myRendererSettings.TopPeakPen = Pens.Green;
             myRendererSettings.BottomPeakPen = Pens.YellowGreen;
             var renderer = new WaveFormRenderer();
-            return await Task.Run(() => { return renderer.Render(audioFilePath, myRendererSettings); });
+
+            using (WaveStream waveStream = WaveFormatConversionStream.CreatePcmStream(new Mp3FileReader(audioFilePath)))
+                return await Task.Run(() => { return renderer.Render(waveStream, myRendererSettings); });
         }
     }
 }
